@@ -1,21 +1,19 @@
 // https://jsonplaceholder.typicode.com/ 
 
-const { fromPromise } = Rx.Observable;
+const { fromPromise, of, forkJoin } = Rx.Observable;
 
-function fetchInSerie(id) {
-    id++;
-    if (id > 10) return;
-    return fromPromise(fetch(`https://jsonplaceholder.typicode.com/users/${id}`))
-        .flatMap(res => res.json())
-        .subscribe(
-        (resolve) => {
-            console.log(resolve)
-        },
-        null,
-        () => {
-            fetchInSerie(id)
-        }
-        );
+const numberArr = [];
+
+for (let i = 1; i <= 10; i++) {
+    numberArr.push(i);
 }
 
-fetchInSerie(0)
+
+const sub = Rx.Observable.forkJoin(
+    numberArr
+        .map(num => fromPromise(fetch(`https://jsonplaceholder.typicode.com/users/${num}`))),
+    (...users) => users.map(x => x.json())
+).flatMap(x => x)
+
+
+sub.flatMap(x => x).subscribe(x => console.log(x))
