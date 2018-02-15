@@ -1,21 +1,23 @@
 // https://jsonplaceholder.typicode.com/ 
 
-const { fromPromise } = Rx.Observable;
+const { fromPromise, interval, mergeDelayError, merge, timeout, empty, timeoutWithSelector } = Rx.Observable;
 
-function fetchInSerie(id) {
+
+const reject = interval(5000).map(x => new Error('Timeout!'));
+const resolve = function (id) {
     id++;
     if (id > 10) return;
     return fromPromise(fetch(`https://jsonplaceholder.typicode.com/users/${id}`))
+        .timeout(200)
         .flatMap(res => res.json())
         .subscribe(
-        (resolve) => {
-            console.log(resolve)
-        },
-        null,
-        () => {
-            fetchInSerie(id)
-        }
+            (resolve) => {
+                console.log(resolve)
+            },
+            null,
+            () => {
+                resolve(id)
+            }
         );
 }
-
-fetchInSerie(0)
+resolve(0)
